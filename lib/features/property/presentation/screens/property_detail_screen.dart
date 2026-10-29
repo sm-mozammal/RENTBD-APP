@@ -1185,24 +1185,162 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Masked Chat Button
+            // Send Inquiry Button
             Expanded(
               flex: 5,
               child: BariButton(
-                label: 'Masked Chat',
+                label: 'Send Inquiry',
                 variant: BariButtonVariant.primary,
-                leadingIcon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-                onPressed: () {
-                  try {
-                    context.pushNamed(
-                      RouteNames.chatRoom,
-                      pathParameters: {'id': property.id},
-                    );
-                  } catch (_) {}
-                },
+                leadingIcon: const Icon(Icons.send_rounded, size: 18),
+                onPressed: () => _showSendInquiryBottomSheet(property),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showSendInquiryBottomSheet(Property property) {
+    final messageController = TextEditingController(
+      text: 'Hello, I am interested in this flat. Could you please share more details about availability and terms?',
+    );
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.send_rounded, color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Send Verified Inquiry',
+                          style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          'Direct to ${property.landlordName}\'s Screening Inbox',
+                          style: AppTypography.bodySmall.copyWith(color: AppColors.lightTextSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.secondarySoft.withAlpha(80),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.secondary.withAlpha(50)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, color: AppColors.secondary, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Direct In-App Chat & Masked Calling are coming in the next milestone. Landlords review your verified profile and respond to inquiries.',
+                        style: AppTypography.labelSmall.copyWith(color: AppColors.lightTextSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Your Message',
+                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: messageController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Ask about rent, deposit, move-in date...',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.all(12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: BariButton(
+                  label: isSubmitting ? 'Sending...' : 'Submit Inquiry',
+                  isLoading: isSubmitting,
+                  variant: BariButtonVariant.primary,
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          final text = messageController.text.trim();
+                          if (text.isEmpty) return;
+                          setModalState(() => isSubmitting = true);
+                          try {
+                            await ServiceLocator.submitInquiryUseCase(property.id, text);
+                            if (mounted) {
+                              Navigator.of(bottomSheetContext).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Inquiry sent successfully to landlord screening inbox!'),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setModalState(() => isSubmitting = false);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(RentBdErrorFormatter.format(e)),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -6,6 +6,8 @@ import 'failures.dart';
 /// Ensures all errors across Network, BLoC, and UI layers are converted into
 /// clean, friendly, bilingual (Bangla + English) messages without exposing
 /// raw technical stack traces, socket errors, HTML pages, or ugly prefixes.
+typedef ErrorFormatter = RentBdErrorFormatter;
+
 class RentBdErrorFormatter {
   const RentBdErrorFormatter._();
 
