@@ -23,21 +23,28 @@ class PropertyRemoteDataSource implements PropertyDataSource {
     try {
       final queryParams = <String, dynamic>{'page': page};
       if (filter != null) {
-        if (filter.area != null) queryParams['area'] = filter.area;
+        if (filter.area != null) {
+          queryParams['area'] = filter.area;
+        }
         if (filter.tenantCategory != null &&
             filter.tenantCategory != TenantCategory.any) {
-          queryParams['tenant_category'] = filter.tenantCategory!.name
-              .toUpperCase();
+          queryParams['tenant_category'] = filter.tenantCategory!.name.toUpperCase();
         }
         if (filter.propertyType != null) {
-          queryParams['property_type'] = filter.propertyType!.name
-              .toUpperCase();
+          queryParams['property_type'] = filter.propertyType!.name.toUpperCase();
         }
-        if (filter.minRent != null) queryParams['min_rent'] = filter.minRent;
-        if (filter.maxRent != null) queryParams['max_rent'] = filter.maxRent;
-        if (filter.bedrooms != null) queryParams['bedrooms'] = filter.bedrooms;
-        if (filter.searchQuery != null)
+        if (filter.minRent != null) {
+          queryParams['min_rent'] = filter.minRent;
+        }
+        if (filter.maxRent != null) {
+          queryParams['max_rent'] = filter.maxRent;
+        }
+        if (filter.bedrooms != null) {
+          queryParams['bedrooms'] = filter.bedrooms;
+        }
+        if (filter.searchQuery != null) {
           queryParams['search'] = filter.searchQuery;
+        }
       }
 
       final response = await _dioClient.get(
