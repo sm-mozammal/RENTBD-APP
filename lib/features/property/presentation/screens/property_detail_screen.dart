@@ -1316,8 +1316,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           setModalState(() => isSubmitting = true);
                           try {
                             await ServiceLocator.submitInquiryUseCase(property.id, text);
-                            if (mounted) {
+                            if (bottomSheetContext.mounted) {
                               Navigator.of(bottomSheetContext).pop();
+                            }
+                            if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Inquiry sent successfully to landlord screening inbox!'),

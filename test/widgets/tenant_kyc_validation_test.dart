@@ -251,11 +251,14 @@ void main() {
         (tester) async {
       debugNetworkImageHttpClientProvider = () => _MockHttpClient();
       try {
-        final (authBloc, _) = createBlocs(isLandlord: true, isKycDone: false);
+        final (authBloc, propertyBloc) = createBlocs(isLandlord: true, isKycDone: false);
 
         await tester.pumpWidget(
-          BlocProvider<AuthBloc>.value(
-            value: authBloc,
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<PropertyBloc>.value(value: propertyBloc),
+            ],
             child: const MaterialApp(
               home: PropertyVaultScreen(),
             ),
@@ -277,6 +280,7 @@ void main() {
         expect(find.text('NID Verification Required / KYC আবশ্যক'), findsOneWidget);
 
         authBloc.close();
+        propertyBloc.close();
       } finally {
         debugNetworkImageHttpClientProvider = null;
       }
