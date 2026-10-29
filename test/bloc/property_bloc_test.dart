@@ -96,5 +96,22 @@ void main() {
         ),
       ],
     );
+    blocTest<PropertyBloc, PropertyState>(
+      'clears tenant category filter when switching from family to all',
+      build: buildBloc,
+      act: (bloc) {
+        bloc.add(const FilterCategoryChangedEvent(TenantCategoryFilter.family));
+        bloc.add(const FilterCategoryChangedEvent(TenantCategoryFilter.all));
+      },
+      wait: const Duration(milliseconds: 100),
+      verify: (bloc) {
+        expect(bloc.state, isA<PropertyLoaded>());
+        final state = bloc.state as PropertyLoaded;
+        expect(state.activeCategory, equals(TenantCategoryFilter.all));
+        expect(state.filter.tenantCategory, isNull);
+        expect(state.filter.propertyType, isNull);
+        expect(state.properties.isNotEmpty, isTrue);
+      },
+    );
   });
 }

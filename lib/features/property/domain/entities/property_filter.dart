@@ -37,11 +37,12 @@ class PropertyFilter extends Equatable {
     String? searchQuery,
     bool clearArea = false,
     bool clearCategory = false,
+    bool clearPropertyType = false,
   }) {
     return PropertyFilter(
       area: clearArea ? null : (area ?? this.area),
       tenantCategory: clearCategory ? null : (tenantCategory ?? this.tenantCategory),
-      propertyType: propertyType ?? this.propertyType,
+      propertyType: clearPropertyType ? null : (propertyType ?? this.propertyType),
       minRent: minRent ?? this.minRent,
       maxRent: maxRent ?? this.maxRent,
       bedrooms: bedrooms ?? this.bedrooms,

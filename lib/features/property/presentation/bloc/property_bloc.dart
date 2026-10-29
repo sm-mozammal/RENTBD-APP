@@ -45,12 +45,14 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
     }
     try {
       final properties = await getPropertiesUseCase(filter: _currentFilter);
-      final saved = await getSavedPropertiesUseCase();
+      final currentSaved = state is PropertyLoaded
+          ? (state as PropertyLoaded).savedProperties
+          : const <Property>[];
 
       emit(
         PropertyLoaded(
           properties: properties,
-          savedProperties: saved,
+          savedProperties: currentSaved,
           activeCategory: _currentCategory,
           activeArea: _currentArea,
           filter: _currentFilter,
@@ -67,13 +69,18 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
   ) async {
     _currentCategory = event.category;
 
-    TenantCategory? category;
     switch (event.category) {
       case TenantCategoryFilter.family:
-        category = TenantCategory.family;
+        _currentFilter = _currentFilter.copyWith(
+          tenantCategory: TenantCategory.family,
+          clearPropertyType: true,
+        );
         break;
       case TenantCategoryFilter.bachelor:
-        category = TenantCategory.bachelorMale;
+        _currentFilter = _currentFilter.copyWith(
+          tenantCategory: TenantCategory.bachelorMale,
+          clearPropertyType: true,
+        );
         break;
       case TenantCategoryFilter.sublet:
         // Filter sublets via propertyType
@@ -81,17 +88,14 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
           propertyType: PropertyType.sublet,
           clearCategory: true,
         );
-        add(const FetchPropertiesEvent());
-        return;
+        break;
       case TenantCategoryFilter.all:
-        category = TenantCategory.any;
+        _currentFilter = _currentFilter.copyWith(
+          clearCategory: true,
+          clearPropertyType: true,
+        );
         break;
     }
-
-    _currentFilter = _currentFilter.copyWith(
-      tenantCategory: category,
-      propertyType: null,
-    );
 
     add(const FetchPropertiesEvent());
   }

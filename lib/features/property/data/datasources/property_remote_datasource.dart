@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:rentbd_app/core/error/exceptions.dart';
 import 'package:rentbd_app/core/network/dio_client.dart';
 import 'package:rentbd_app/core/network/drf_paginated_response.dart';
+import 'package:rentbd_app/features/property/domain/entities/property.dart';
 import '../../domain/entities/property_filter.dart';
 import '../models/property_model.dart';
 import '../models/property_operations_model.dart';
@@ -23,13 +24,20 @@ class PropertyRemoteDataSource implements PropertyDataSource {
       final queryParams = <String, dynamic>{'page': page};
       if (filter != null) {
         if (filter.area != null) queryParams['area'] = filter.area;
-        if (filter.tenantCategory != null) {
-          queryParams['tenant_category'] = filter.tenantCategory!.name.toUpperCase();
+        if (filter.tenantCategory != null &&
+            filter.tenantCategory != TenantCategory.any) {
+          queryParams['tenant_category'] = filter.tenantCategory!.name
+              .toUpperCase();
+        }
+        if (filter.propertyType != null) {
+          queryParams['property_type'] = filter.propertyType!.name
+              .toUpperCase();
         }
         if (filter.minRent != null) queryParams['min_rent'] = filter.minRent;
         if (filter.maxRent != null) queryParams['max_rent'] = filter.maxRent;
         if (filter.bedrooms != null) queryParams['bedrooms'] = filter.bedrooms;
-        if (filter.searchQuery != null) queryParams['search'] = filter.searchQuery;
+        if (filter.searchQuery != null)
+          queryParams['search'] = filter.searchQuery;
       }
 
       final response = await _dioClient.get(
@@ -116,15 +124,19 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   }
 
   @override
-  Future<PropertyModel> createProperty(Map<String, dynamic> propertyData) async {
+  Future<PropertyModel> createProperty(
+    Map<String, dynamic> propertyData,
+  ) async {
     try {
-      final photos = (propertyData['photos'] as List<dynamic>?)
+      final photos =
+          (propertyData['photos'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .where((p) => p.trim().isNotEmpty)
               .toList() ??
           [];
 
-      final cleanData = Map<String, dynamic>.from(propertyData)..remove('photos');
+      final cleanData = Map<String, dynamic>.from(propertyData)
+        ..remove('photos');
       final response = await _dioClient.post('/properties/', data: cleanData);
       var model = PropertyModel.fromJson(response.data as Map<String, dynamic>);
 
@@ -187,9 +199,7 @@ class PropertyRemoteDataSource implements PropertyDataSource {
       final response = await _dioClient.post(
         '/properties/$propertyId/photos/',
         data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-        ),
+        options: Options(contentType: 'multipart/form-data'),
       );
 
       final data = response.data as Map<String, dynamic>;
@@ -204,7 +214,9 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   @override
   Future<bool> toggleVault(String propertyId) async {
     try {
-      final response = await _dioClient.post('/properties/$propertyId/toggle-vault/');
+      final response = await _dioClient.post(
+        '/properties/$propertyId/toggle-vault/',
+      );
       final data = response.data as Map<String, dynamic>? ?? {};
       return (data['is_vaulted'] ?? data['is_vault']) as bool? ?? false;
     } on DioException catch (e) {
@@ -233,7 +245,9 @@ class PropertyRemoteDataSource implements PropertyDataSource {
           'distance_km': distanceKm,
         },
       );
-      return MoveInEstimateModel.fromJson(response.data as Map<String, dynamic>);
+      return MoveInEstimateModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
@@ -242,13 +256,17 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   }
 
   @override
-  Future<PropertyComparisonModel> compareProperties(List<String> propertyIds) async {
+  Future<PropertyComparisonModel> compareProperties(
+    List<String> propertyIds,
+  ) async {
     try {
       final response = await _dioClient.post(
         '/properties/compare/',
         data: {'property_ids': propertyIds},
       );
-      return PropertyComparisonModel.fromJson(response.data as Map<String, dynamic>);
+      return PropertyComparisonModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
@@ -257,7 +275,9 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   }
 
   @override
-  Future<List<PropertyModel>> drawSearch(List<Map<String, double>> polygon) async {
+  Future<List<PropertyModel>> drawSearch(
+    List<Map<String, double>> polygon,
+  ) async {
     try {
       final response = await _dioClient.post(
         '/properties/draw-search/',
@@ -272,7 +292,9 @@ class PropertyRemoteDataSource implements PropertyDataSource {
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
-      throw ServerException(message: 'Failed to execute polygon draw search: $e');
+      throw ServerException(
+        message: 'Failed to execute polygon draw search: $e',
+      );
     }
   }
 
@@ -291,7 +313,9 @@ class PropertyRemoteDataSource implements PropertyDataSource {
           'commute_mode': commuteMode,
         },
       );
-      return CommuteEstimateModel.fromJson(response.data as Map<String, dynamic>);
+      return CommuteEstimateModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
@@ -302,8 +326,12 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   @override
   Future<NearbyEssentialsModel> getNearbyEssentials(String propertyId) async {
     try {
-      final response = await _dioClient.get('/properties/$propertyId/nearby-essentials/');
-      return NearbyEssentialsModel.fromJson(response.data as Map<String, dynamic>);
+      final response = await _dioClient.get(
+        '/properties/$propertyId/nearby-essentials/',
+      );
+      return NearbyEssentialsModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
@@ -314,8 +342,12 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   @override
   Future<FairRentAnalysisModel> getFairRentMeter(String propertyId) async {
     try {
-      final response = await _dioClient.get('/properties/$propertyId/fair-rent-meter/');
-      return FairRentAnalysisModel.fromJson(response.data as Map<String, dynamic>);
+      final response = await _dioClient.get(
+        '/properties/$propertyId/fair-rent-meter/',
+      );
+      return FairRentAnalysisModel.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
@@ -324,7 +356,9 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   }
 
   @override
-  Future<RentAgreementModel> generateAgreement(Map<String, dynamic> agreementData) async {
+  Future<RentAgreementModel> generateAgreement(
+    Map<String, dynamic> agreementData,
+  ) async {
     try {
       final response = await _dioClient.post(
         '/properties/ai/generate-agreement/',
@@ -341,22 +375,32 @@ class PropertyRemoteDataSource implements PropertyDataSource {
   @override
   Future<List<AreaHeatmapItemModel>> getDemandSupplyHeatmap() async {
     try {
-      final response = await _dioClient.get('/properties/analytics/demand-supply-heatmap/');
+      final response = await _dioClient.get(
+        '/properties/analytics/demand-supply-heatmap/',
+      );
       final list = (response.data is Map && response.data['heatmap'] != null)
           ? response.data['heatmap'] as List<dynamic>
           : response.data as List<dynamic>? ?? [];
       return list
-          .map((item) => AreaHeatmapItemModel.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) =>
+                AreaHeatmapItemModel.fromJson(item as Map<String, dynamic>),
+          )
           .toList();
     } on DioException catch (e) {
       throw ServerException.fromDio(e);
     } catch (e) {
-      throw ServerException(message: 'Failed to fetch demand/supply heatmap: $e');
+      throw ServerException(
+        message: 'Failed to fetch demand/supply heatmap: $e',
+      );
     }
   }
 
   @override
-  Future<PropertyModel> updatePropertyStatus(String propertyId, String status) async {
+  Future<PropertyModel> updatePropertyStatus(
+    String propertyId,
+    String status,
+  ) async {
     try {
       final response = await _dioClient.patch(
         '/admin/properties/$propertyId/status/',
@@ -370,4 +414,3 @@ class PropertyRemoteDataSource implements PropertyDataSource {
     }
   }
 }
-
